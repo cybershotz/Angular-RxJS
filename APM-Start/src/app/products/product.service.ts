@@ -22,18 +22,11 @@ export class ProductService {
       catchError(this.handleError)
     );
 
-  /* map(products => products.map(product => ({
-    ...product,
-    price: product.price * 1.5,
-    searchKey: [product.productName]
-  }) as Product)
-  ), */
-
   productsWithCategory$ = combineLatest([
     this.products$,
     this.productCategoryService.productCategories$
   ]).pipe(
-    map(([products, categories]) => 
+    map(([products, categories]) =>
       products.map(product => ({
         ...product,
         price: product.price * 1.5,
