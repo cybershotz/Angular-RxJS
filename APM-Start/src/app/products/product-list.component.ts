@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { Subscription, Observable, never, EMPTY, of } from 'rxjs';
+import { Subscription, Observable, never, EMPTY, of, Subject, combineLatest, BehaviorSubject } from 'rxjs';
 
 import { Product } from './product';
 import { ProductService } from './product.service';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, startWith } from 'rxjs/operators';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 
 @Component({
@@ -17,27 +17,29 @@ export class ProductListComponent {
   categories;
   selectedCategoryId = 1;
 
-  products$ = this.productService.productsWithCategory$
-    .pipe(
-      catchError(err => {
-        this.errorMessage = err;
-        return EMPTY;
-        // return of([]);
-      })
-    )
+  private categorySelectedSubject = new BehaviorSubject<number>(0); // We can give behaviour subject an initial value
+  // private categorySelectedSubject = new Subject<number>();
+  categorySelectedAction$ = this.categorySelectedSubject.asObservable();
 
-  productsSimpleFilter$ = this.productService.productsWithCategory$
-    .pipe(
-      map(products =>
-        products.filter(product =>
-          this.selectedCategoryId ? product.categoryId === this.selectedCategoryId : true)
-      ),
-      catchError(err => {
-        this.errorMessage = err;
-        return EMPTY;
-        // return of([]);
-      })
-    )
+
+  products$ = combineLatest([
+    this.productService.productsWithCategory$,
+    this.categorySelectedAction$
+      // .pipe(
+      //   startWith(0) // Default value of 0. Since combine latest won't work untill all observables 
+      // emit atleast first value
+      // )
+  ]).pipe(
+    map(([products, selectedCategoryId]) =>
+      products.filter(product =>
+        selectedCategoryId ? product.categoryId === selectedCategoryId : true)
+    ),
+    catchError(err => {
+      this.errorMessage = err;
+      return EMPTY;
+      // return of([]);
+    })
+  ) 
 
   categories$ = this.productCategoryService.productCategories$
     .pipe(
@@ -55,6 +57,6 @@ export class ProductListComponent {
   }
 
   onSelected(categoryId: string): void {
-    this.selectedCategoryId = +categoryId;
+    this.categorySelectedSubject.next(+categoryId)
   }
 }
