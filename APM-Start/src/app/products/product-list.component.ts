@@ -10,17 +10,12 @@ import { catchError } from 'rxjs/operators';
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
-export class ProductListComponent implements OnInit  {
+export class ProductListComponent  {
   pageTitle = 'Product List';
   errorMessage = '';
   categories;
 
-  products$: Observable<Product[]>;
-
-  constructor(private productService: ProductService) { }
-
-  ngOnInit(): void {
-    this.products$ = this.productService.getProducts()
+  products$ = this.productService.products$
     .pipe(
       catchError(err => {
         this.errorMessage = err;
@@ -28,8 +23,8 @@ export class ProductListComponent implements OnInit  {
         // return of([]);
       })
     )
-  }
 
+  constructor(private productService: ProductService) { }
 
   onAdd(): void {
     console.log('Not yet implemented');
