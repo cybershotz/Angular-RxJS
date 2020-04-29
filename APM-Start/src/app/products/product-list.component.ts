@@ -24,7 +24,7 @@ export class ProductListComponent {
 
 
   products$ = combineLatest([
-    this.productService.productsWithCategory$,
+    this.productService.productWithAdd$,
     this.categorySelectedAction$
       // .pipe(
       //   startWith(0) // Default value of 0. Since combine latest won't work untill all observables 
@@ -54,7 +54,8 @@ export class ProductListComponent {
     private productCategoryService: ProductCategoryService) { }
 
   onAdd(): void {
-    console.log('Not yet implemented');
+    // console.log('Not yet implemented');
+    this.productService.addProduct();
   }
 
   onSelected(categoryId: string): void {

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Observable, throwError, combineLatest, BehaviorSubject } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { Observable, throwError, combineLatest, BehaviorSubject, Subject, merge } from 'rxjs';
+import { catchError, tap, map, scan } from 'rxjs/operators';
 
 import { Product } from './product';
 import { Supplier } from '../suppliers/supplier';
@@ -47,6 +47,16 @@ export class ProductService {
     tap(product => console.log('selectedProduct', product))
   )
 
+  private productInsertedSubject = new Subject<Product>();
+  productInsertedAction$ = this.productInsertedSubject.asObservable();
+
+  productWithAdd$ = merge(
+    this.productsWithCategory$,
+    this.productInsertedAction$
+  ).pipe(
+    scan((acc: Product[], value: Product) => [...acc, value])
+  )
+
   constructor(private http: HttpClient,
     private supplierService: SupplierService,
     private productCategoryService: ProductCategoryService) { }
@@ -54,6 +64,24 @@ export class ProductService {
 
   selectedProductChanged(selectedProductId: number): void {
     this.productSelectedSubject.next(selectedProductId);
+  }
+
+  addProduct(): void {
+    const product: Product = this.fakeProduct();
+    this.productInsertedSubject.next(product);
+  }
+
+  private fakeProduct() {
+    return {
+      id: 42,
+      productName: 'Another One',
+      productCode: 'TBX-0042',
+      description: 'Our new product',
+      price: 8.9,
+      categoryId: 3,
+      category: 'Toolbox',
+      quantityInStock: 30
+    };
   }
 
   private handleError(err: any) {
